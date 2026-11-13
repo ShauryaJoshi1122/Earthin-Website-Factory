@@ -3,16 +3,16 @@ import { db, hostingConnections, hostingCapabilities } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { getSessionUser, checkPermission, logAudit } from '@/lib/auth';
 import { encryptSecret } from '@/lib/crypto';
-import { CpanelConnectionAdapter } from '@/services/cpanel';
+import { CpanelConnectionAdapter, normalizeCpanelUrl } from '@/services/cpanel';
 import { CONFIG } from '@/lib/config';
 import { z } from 'zod';
 
 const createHostingSchema = z.object({
   name: z.string().min(2),
   type: z.enum(['internal_cpanel', 'external_cpanel']).default('internal_cpanel'),
-  serverUrl: z.string().url(),
-  username: z.string().min(2),
-  apiToken: z.string().min(5),
+  serverUrl: z.string().min(1).transform((val) => normalizeCpanelUrl(val)),
+  username: z.string().min(1),
+  apiToken: z.string().min(1),
   authType: z.enum(['api_token', 'password']).default('api_token'),
   maxConcurrentDeployments: z.number().int().min(1).max(10).default(2),
 });

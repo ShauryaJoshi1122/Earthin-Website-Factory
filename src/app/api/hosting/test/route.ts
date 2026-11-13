@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CpanelConnectionAdapter } from '@/services/cpanel';
+import { CpanelConnectionAdapter, normalizeCpanelUrl } from '@/services/cpanel';
 import { getSessionUser } from '@/lib/auth';
 import { db, hostingConnections } from '@/db';
 import { eq } from 'drizzle-orm';
@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 const testSchema = z.object({
   id: z.number().optional(),
-  serverUrl: z.string().optional(),
+  serverUrl: z.string().optional().transform((val) => (val ? normalizeCpanelUrl(val) : val)),
   username: z.string().optional(),
   apiToken: z.string().optional(),
   authType: z.enum(['api_token', 'password']).optional(),

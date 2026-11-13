@@ -16,6 +16,18 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+function cleanCpanelUrl(raw: string): string {
+  let u = (raw || '').trim().replace(/\/+$/, '');
+  if (!u) return '';
+  if (!u.startsWith('http://') && !u.startsWith('https://')) {
+    u = `https://${u}`;
+  }
+  if (!u.match(/:\d+$/)) {
+    u = `${u}:2083`;
+  }
+  return u;
+}
+
 export default function AddHostingPage() {
   const router = useRouter();
 
@@ -39,6 +51,9 @@ export default function AddHostingPage() {
       return;
     }
 
+    const normalizedUrl = cleanCpanelUrl(serverUrl);
+    setServerUrl(normalizedUrl);
+
     setTesting(true);
     setTestSuccess(null);
     setTestError(null);
@@ -47,7 +62,7 @@ export default function AddHostingPage() {
       const res = await fetch('/api/hosting/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serverUrl, username, apiToken, authType }),
+        body: JSON.stringify({ serverUrl: normalizedUrl, username: username.trim(), apiToken: apiToken.trim(), authType }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -69,16 +84,19 @@ export default function AddHostingPage() {
     setSubmitting(true);
     setError(null);
 
+    const normalizedUrl = cleanCpanelUrl(serverUrl);
+    setServerUrl(normalizedUrl);
+
     try {
       const res = await fetch('/api/hosting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           type,
-          serverUrl,
-          username,
-          apiToken,
+          serverUrl: normalizedUrl,
+          username: username.trim(),
+          apiToken: apiToken.trim(),
           authType,
         }),
       });
@@ -209,7 +227,12 @@ export default function AddHostingPage() {
                 required
                 value={serverUrl}
                 onChange={(e) => setServerUrl(e.target.value)}
-                placeholder="https://cpanel.domain.com:2083 or IP:2083"
+                onBlur={() => {
+                  if (serverUrl.trim()) {
+                    setServerUrl(cleanCpanelUrl(serverUrl));
+                  }
+                }}
+                placeholder="https://cpanel.domain.com:2083 or yourdomain.com"
                 className="w-full bg-sidebar border border-card-border rounded-lg px-3.5 py-2.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
               />
             </div>

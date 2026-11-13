@@ -1,5 +1,18 @@
 import { CpanelCredentials, CpanelUapiResponse } from './cpanel-types';
 
+export function normalizeCpanelUrl(rawUrl: string): string {
+  let url = (rawUrl || '').trim().replace(/\/+$/, '');
+  if (!url) return '';
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
+  }
+  // If no port specified, default to 2083 (cPanel SSL)
+  if (!url.match(/:\d+$/)) {
+    url = `${url}:2083`;
+  }
+  return url;
+}
+
 export class CpanelClient {
   private serverUrl: string;
   private username: string;
@@ -7,15 +20,7 @@ export class CpanelClient {
   private authType: 'api_token' | 'password';
 
   constructor(credentials: CpanelCredentials) {
-    let url = credentials.serverUrl.trim().replace(/\/+$/, '');
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = `https://${url}`;
-    }
-    // If no port specified, default to 2083 (cPanel SSL)
-    if (!url.match(/:\d+$/)) {
-      url = `${url}:2083`;
-    }
-    this.serverUrl = url;
+    this.serverUrl = normalizeCpanelUrl(credentials.serverUrl);
     this.username = credentials.username.trim();
     this.apiToken = credentials.apiToken.trim();
     this.authType = credentials.authType || 'api_token';
