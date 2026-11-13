@@ -3,7 +3,7 @@ async function run() {
   console.log(' RUNNING END-TO-END HTTP TESTS ON LIVE APP (PORT 3000)');
   console.log('====================================================\n');
 
-  const BASE_URL = 'http://127.0.0.1:3000';
+  const BASE_URL = process.env.TEST_URL || 'http://127.0.0.1:3000';
 
   // 1. Test GET /api/neon/verify (Tests Postgres, Object Storage, and Realtime internally)
   console.log('[Test 1] Testing GET /api/neon/verify...');
