@@ -29,7 +29,9 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      router.push('/');
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const target = params?.get('redirect') || '/';
+      router.push(target);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
