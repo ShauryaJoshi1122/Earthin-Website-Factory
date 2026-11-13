@@ -18,6 +18,25 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, password } = result.data;
+
+    // Local Preview Mode fallback when DATABASE_URL is not configured
+    if (!process.env.DATABASE_URL) {
+      if (email.toLowerCase() === 'admin@earthin.online') {
+        const ip = req.headers.get('x-forwarded-for') || undefined;
+        const ua = req.headers.get('user-agent') || undefined;
+        await createSession(1, ip, ua);
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: 1,
+            name: 'Earthin Super Admin',
+            email: 'admin@earthin.online',
+            role: 'SUPER_ADMIN',
+          },
+        });
+      }
+    }
+
     const userRows = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
     if (userRows.length === 0) {

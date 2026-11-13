@@ -20,6 +20,31 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({
+      connections: [
+        {
+          id: 1,
+          name: 'Earthin Main cPanel (Local Demo)',
+          type: 'internal_cpanel',
+          serverUrl: 'https://cpanel.earthin.online:2083',
+          username: 'earthin',
+          status: 'active',
+          maxConcurrentDeployments: 2,
+          capabilities: {
+            phpVersion: '8.3',
+            mysqlVersion: '8.0',
+            hasMysqlCreateDb: true,
+            hasMysqlCreateUser: true,
+            hasFileman: true,
+            hasSslSupport: true,
+            detectedDomains: ['samachar.earthin.online', 'patrika.earthin.online'],
+          },
+        },
+      ],
+    });
+  }
+
   try {
     const list = await db
       .select({

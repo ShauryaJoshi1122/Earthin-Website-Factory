@@ -9,6 +9,21 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({
+      stats: {
+        totalWebsites: 0,
+        activeWebsites: 0,
+        deployingCount: 0,
+        failedCount: 0,
+        hostingCount: 0,
+        releasesCount: 1,
+      },
+      recentDeployments: [],
+      degradedHosting: [],
+    });
+  }
+
   try {
     // 1. Total websites
     const totalWebsitesRes = await db.select({ count: sql<number>`count(*)` }).from(websites);

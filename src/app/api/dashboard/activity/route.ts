@@ -9,6 +9,10 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ activity: [] });
+  }
+
   try {
     const activity = await db
       .select({

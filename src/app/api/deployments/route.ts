@@ -15,6 +15,10 @@ export async function GET(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ deployments: [] });
+  }
+
   try {
     const list = await db
       .select({

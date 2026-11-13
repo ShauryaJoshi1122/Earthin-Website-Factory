@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CmsReleaseService } from '@/services/cms/release-service';
 import { getSessionUser, checkPermission, logAudit } from '@/lib/auth';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
 
 const registerReleaseSchema = z.object({
   version: z.string().min(1),
@@ -15,6 +17,28 @@ const registerReleaseSchema = z.object({
 const service = new CmsReleaseService();
 
 export async function GET() {
+  if (!process.env.DATABASE_URL) {
+    const releaseFile = path.join(process.cwd(), 'existing-cms', 'release.json');
+    if (fs.existsSync(releaseFile)) {
+      const rel = JSON.parse(fs.readFileSync(releaseFile, 'utf8'));
+      return NextResponse.json({
+        releases: [
+          {
+            id: 1,
+            version: rel.version || '2.0.0',
+            name: rel.name || 'Earthin News CMS',
+            minPhp: rel.min_php || '8.3.0',
+            changelog: rel.changelog || [],
+            isStable: true,
+            isDefault: true,
+            packageSizeBytes: 26214400,
+            releasedAt: rel.released_at || new Date().toISOString(),
+          },
+        ],
+      });
+    }
+  }
+
   try {
     const releases = await service.listReleases();
     return NextResponse.json({ releases });
