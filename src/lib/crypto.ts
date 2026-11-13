@@ -1,8 +1,9 @@
 import crypto from 'crypto';
+import { CONFIG } from '@/lib/config';
 
 // 32-byte key for AES-256-GCM
 function getEncryptionKey(): Buffer {
-  const hexOrBase64 = process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+  const hexOrBase64 = CONFIG.ENCRYPTION_KEY;
   if (hexOrBase64.length === 64) {
     return Buffer.from(hexOrBase64, 'hex');
   }
@@ -50,7 +51,7 @@ export function decryptSecret(encryptedString: string): string {
  * Sign an installation manifest or request payload using HMAC-SHA256
  */
 export function signPayload(payload: object | string, customSecret?: string): string {
-  const secret = customSecret || process.env.DEPLOYMENT_SIGNING_KEY || 'earthin_manifest_signing_key_default';
+  const secret = customSecret || CONFIG.DEPLOYMENT_SIGNING_KEY;
   const data = typeof payload === 'string' ? payload : JSON.stringify(payload);
   return crypto.createHmac('sha256', secret).update(data).digest('hex');
 }

@@ -3,10 +3,9 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { db, users, sessions, userRoles, roles, rolePermissions, permissions, auditLogs } from '@/db';
 import { eq, and, gt } from 'drizzle-orm';
+import { CONFIG } from '@/lib/config';
 
-const AUTH_SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || 'earthin_factory_dev_secret_replace_in_production_32chars!'
-);
+const AUTH_SECRET = new TextEncoder().encode(CONFIG.AUTH_SECRET);
 export const SESSION_COOKIE_NAME = 'earthin_factory_session';
 
 export interface AuthUser {
@@ -34,7 +33,7 @@ export async function createSession(userId: number, ipAddress?: string, userAgen
     .setExpirationTime('7d')
     .sign(AUTH_SECRET);
 
-  if (process.env.DATABASE_URL) {
+  if (CONFIG.DATABASE_URL) {
     try {
       await db.insert(sessions).values({
         id: crypto.randomUUID(),
@@ -82,7 +81,7 @@ export async function getSessionUser(): Promise<AuthUser | null> {
     const userId = payload.userId as number;
     if (!userId) return null;
 
-    if (!process.env.DATABASE_URL) {
+    if (!CONFIG.DATABASE_URL) {
       return {
         id: userId,
         name: 'Earthin Super Admin',
@@ -162,7 +161,7 @@ export async function logAudit(
   ipAddress?: string,
   userAgent?: string
 ): Promise<void> {
-  if (!process.env.DATABASE_URL) return;
+  if (!CONFIG.DATABASE_URL) return;
   try {
     await db.insert(auditLogs).values({
       userId,

@@ -6,27 +6,28 @@ import {
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { put as vercelBlobPut } from '@vercel/blob';
+import { CONFIG } from '@/lib/config';
 
 // Neon Object Storage configuration (S3-compatible)
 export const isNeonStorageAvailable = Boolean(
-  process.env.AWS_ENDPOINT_URL_S3 &&
-  process.env.AWS_ACCESS_KEY_ID &&
-  process.env.AWS_SECRET_ACCESS_KEY
+  CONFIG.AWS_ENDPOINT_URL_S3 &&
+  CONFIG.AWS_ACCESS_KEY_ID &&
+  CONFIG.AWS_SECRET_ACCESS_KEY
 );
 
 export const s3Client = isNeonStorageAvailable
   ? new S3Client({
-      region: process.env.AWS_REGION || 'us-east-2',
-      endpoint: process.env.AWS_ENDPOINT_URL_S3,
+      region: CONFIG.AWS_REGION,
+      endpoint: CONFIG.AWS_ENDPOINT_URL_S3,
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: CONFIG.AWS_ACCESS_KEY_ID,
+        secretAccessKey: CONFIG.AWS_SECRET_ACCESS_KEY,
       },
       forcePathStyle: true,
     })
   : null;
 
-export const DEFAULT_BUCKET = 'assets';
+export const DEFAULT_BUCKET = CONFIG.STORAGE_BUCKET || 'assets';
 
 export interface UploadOptions {
   bucket?: string;
@@ -58,7 +59,7 @@ export async function uploadAsset(
     );
 
     // Neon storage URL or proxied asset path
-    const url = `${process.env.AWS_ENDPOINT_URL_S3}/${bucket}/${path}`;
+    const url = `${CONFIG.AWS_ENDPOINT_URL_S3}/${bucket}/${path}`;
     return {
       url,
       key: path,

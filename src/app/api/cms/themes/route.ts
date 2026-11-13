@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { CmsReleaseService } from '@/services/cms/release-service';
+import { CONFIG } from '@/lib/config';
 import fs from 'fs';
 import path from 'path';
 
 const service = new CmsReleaseService();
 
 export async function GET() {
-  if (!process.env.DATABASE_URL) {
+  if (!CONFIG.DATABASE_URL) {
     // Read directly from filesystem
     const themesDir = path.join(process.cwd(), 'existing-cms', 'themes');
     if (fs.existsSync(themesDir)) {

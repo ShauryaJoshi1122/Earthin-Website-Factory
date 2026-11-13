@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, websites, hostingConnections, cmsReleases, deploymentJobs, auditLogs } from '@/db';
 import { eq, sql, desc } from 'drizzle-orm';
 import { getSessionUser } from '@/lib/auth';
+import { CONFIG } from '@/lib/config';
 
 export async function GET() {
   const user = await getSessionUser();
@@ -9,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!process.env.DATABASE_URL) {
+  if (!CONFIG.DATABASE_URL) {
     return NextResponse.json({
       stats: {
         totalWebsites: 0,

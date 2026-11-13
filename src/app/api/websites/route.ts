@@ -13,6 +13,7 @@ import {
 } from '@/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { getSessionUser, checkPermission, logAudit } from '@/lib/auth';
+import { CONFIG } from '@/lib/config';
 import { DeploymentWorkflowEngine } from '@/services/workflow/deployment-workflow';
 import { generateUuid } from '@/lib/crypto';
 import { z } from 'zod';
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  if (!process.env.DATABASE_URL) {
+  if (!CONFIG.DATABASE_URL) {
     return NextResponse.json({ websites: [] });
   }
 

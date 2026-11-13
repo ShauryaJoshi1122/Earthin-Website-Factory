@@ -3,12 +3,12 @@ import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import { Pool as PgPool } from 'pg';
 import * as schema from './schema';
+import { CONFIG } from '@/lib/config';
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = CONFIG.DATABASE_URL;
 
 function createDb() {
   if (!connectionString) {
-    // If DATABASE_URL is not set yet, provide a dummy/lazy wrapper that logs actionable help
     return {
       query: {} as any,
       select: () => {

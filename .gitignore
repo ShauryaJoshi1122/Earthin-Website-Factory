@@ -23,6 +23,7 @@
 .env*.local
 .env
 !.env.example
+!.env.production
 
 # Vercel
 .vercel

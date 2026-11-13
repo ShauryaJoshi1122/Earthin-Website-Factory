@@ -1,12 +1,13 @@
 import { createRealtime, rawSql } from '@neon/realtime/server';
+import { CONFIG } from '@/lib/config';
 
 const isNeonRealtimeConfigured = Boolean(
-  process.env.NEON_REALTIME_SECRET && process.env.NEON_REALTIME_URL
+  CONFIG.NEON_REALTIME_SECRET && CONFIG.NEON_REALTIME_URL
 );
 
 export const realtimeServer = isNeonRealtimeConfigured
   ? createRealtime({
-      secret: process.env.NEON_REALTIME_SECRET!,
+      secret: CONFIG.NEON_REALTIME_SECRET,
       db: 'neondb',
     })
   : null;
@@ -23,6 +24,6 @@ export async function sealLiveQuery(sql: string, params: any[] = []) {
   const sealed = await realtimeServer.seal({ query });
   return {
     sealedQuery: sealed,
-    url: process.env.NEON_REALTIME_URL!,
+    url: CONFIG.NEON_REALTIME_URL,
   };
 }

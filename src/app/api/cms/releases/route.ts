@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CmsReleaseService } from '@/services/cms/release-service';
 import { getSessionUser, checkPermission, logAudit } from '@/lib/auth';
+import { CONFIG } from '@/lib/config';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
@@ -17,7 +18,7 @@ const registerReleaseSchema = z.object({
 const service = new CmsReleaseService();
 
 export async function GET() {
-  if (!process.env.DATABASE_URL) {
+  if (!CONFIG.DATABASE_URL) {
     const releaseFile = path.join(process.cwd(), 'existing-cms', 'release.json');
     if (fs.existsSync(releaseFile)) {
       const rel = JSON.parse(fs.readFileSync(releaseFile, 'utf8'));

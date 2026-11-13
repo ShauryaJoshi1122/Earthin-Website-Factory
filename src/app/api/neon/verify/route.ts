@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { uploadAsset, downloadAsset, deleteAsset, listAssets, isNeonStorageAvailable } from '@/lib/storage';
 import { sealLiveQuery } from '@/lib/realtime';
+import { CONFIG } from '@/lib/config';
 
 export async function GET() {
   const results: Record<string, any> = {
@@ -53,7 +54,7 @@ export async function GET() {
       results.objectStorage = {
         status: matches ? 'ok' : 'mismatch',
         bucket: 'assets',
-        endpoint: process.env.AWS_ENDPOINT_URL_S3,
+        endpoint: CONFIG.AWS_ENDPOINT_URL_S3,
         provider: upload.provider,
         verifiedReadWrite: matches,
       };
@@ -93,3 +94,4 @@ export async function GET() {
     { status: allPassed ? 200 : 500 }
   );
 }
+
