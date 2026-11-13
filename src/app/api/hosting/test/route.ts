@@ -11,6 +11,7 @@ const testSchema = z.object({
   serverUrl: z.string().optional(),
   username: z.string().optional(),
   apiToken: z.string().optional(),
+  authType: z.enum(['api_token', 'password']).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
-    let { id, serverUrl, username, apiToken } = result.data;
+    let { id, serverUrl, username, apiToken, authType } = result.data;
 
     // If testing an existing connection by ID
     if (id) {
@@ -33,16 +34,18 @@ export async function POST(req: NextRequest) {
       serverUrl = conn.serverUrl;
       username = conn.username;
       apiToken = decryptSecret(conn.apiTokenEncrypted);
+      authType = (conn.authType as 'api_token' | 'password') || 'api_token';
     }
 
     if (!serverUrl || !username || !apiToken) {
-      return NextResponse.json({ error: 'Server URL, username, and API token are required to test.' }, { status: 400 });
+      return NextResponse.json({ error: 'Server URL, username, and API token/password are required to test.' }, { status: 400 });
     }
 
     const adapter = new CpanelConnectionAdapter({
       serverUrl,
       username,
       apiToken,
+      authType: authType || 'api_token',
     });
 
     const capabilities = await adapter.testAndDetectCapabilities();

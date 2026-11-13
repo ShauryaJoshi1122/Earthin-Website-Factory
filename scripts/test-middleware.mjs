@@ -1,5 +1,5 @@
 async function testMiddleware() {
-  const BASE = 'http://127.0.0.1:3000';
+  const BASE = process.env.TEST_URL || 'http://127.0.0.1:3000';
 
   console.log('Testing Authentication Middleware...\n');
 

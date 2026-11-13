@@ -4,6 +4,7 @@ export class CpanelClient {
   private serverUrl: string;
   private username: string;
   private apiToken: string;
+  private authType: 'api_token' | 'password';
 
   constructor(credentials: CpanelCredentials) {
     let url = credentials.serverUrl.trim().replace(/\/+$/, '');
@@ -17,6 +18,7 @@ export class CpanelClient {
     this.serverUrl = url;
     this.username = credentials.username.trim();
     this.apiToken = credentials.apiToken.trim();
+    this.authType = credentials.authType || 'api_token';
   }
 
   /**
@@ -35,8 +37,13 @@ export class CpanelClient {
       url.searchParams.append(key, String(val));
     });
 
+    const authHeader =
+      this.authType === 'password'
+        ? `Basic ${Buffer.from(`${this.username}:${this.apiToken}`).toString('base64')}`
+        : `cpanel ${this.username}:${this.apiToken}`;
+
     const headers: Record<string, string> = {
-      Authorization: `cpanel ${this.username}:${this.apiToken}`,
+      Authorization: authHeader,
       Accept: 'application/json',
       'User-Agent': 'EarthinWebsiteFactory/1.0',
     };
@@ -55,7 +62,9 @@ export class CpanelClient {
 
       if (!response.ok && response.status === 401) {
         throw new Error(
-          `cPanel Authentication Failed (401 Unauthorized). Verify username '${this.username}' and cPanel API Token.`
+          `cPanel Authentication Failed (401 Unauthorized). Verify your cPanel username '${this.username}' and ${
+            this.authType === 'password' ? 'cPanel password' : 'API token'
+          }.`
         );
       }
 

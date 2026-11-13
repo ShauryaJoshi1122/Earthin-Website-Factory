@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Shield,
   Key,
+  Lock,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -22,6 +23,7 @@ export default function AddHostingPage() {
   const [type, setType] = useState<'internal_cpanel' | 'external_cpanel'>('internal_cpanel');
   const [serverUrl, setServerUrl] = useState('');
   const [username, setUsername] = useState('');
+  const [authType, setAuthType] = useState<'password' | 'api_token'>('password');
   const [apiToken, setApiToken] = useState('');
 
   const [testing, setTesting] = useState(false);
@@ -33,7 +35,7 @@ export default function AddHostingPage() {
 
   const handleTest = async () => {
     if (!serverUrl || !username || !apiToken) {
-      alert('Please fill in Server URL, Username, and API Token first.');
+      alert(`Please fill in Server URL, Username, and ${authType === 'password' ? 'Password' : 'API Token'} first.`);
       return;
     }
 
@@ -45,7 +47,7 @@ export default function AddHostingPage() {
       const res = await fetch('/api/hosting/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serverUrl, username, apiToken }),
+        body: JSON.stringify({ serverUrl, username, apiToken, authType }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -77,12 +79,13 @@ export default function AddHostingPage() {
           serverUrl,
           username,
           apiToken,
+          authType,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to save hosting connection');
+        throw new Error(data.error || 'Failed to add hosting connection.');
       }
 
       router.push('/hosting');
@@ -96,24 +99,31 @@ export default function AddHostingPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Back Link & Header */}
+        <div>
           <Link
             href="/hosting"
-            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary mb-3 transition"
+            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition mb-3"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Hosting Connections</span>
+            Back to Hosting Accounts
           </Link>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-text-primary">
-            Connect cPanel Hosting Account
-          </h1>
-          <p className="text-xs text-text-muted mt-0.5">
-            Add a hosting connection using standard cPanel UAPI authentication tokens
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <Server className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">Connect cPanel Hosting</h1>
+              <p className="text-xs text-text-muted mt-0.5">
+                Add an internal Earthin cPanel or customer cPanel server for automated website provisioning
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-card border border-card-border rounded-2xl p-6 md:p-8 glow-card">
+        {/* Form Card */}
+        <div className="bg-card border border-card-border rounded-2xl p-6 md:p-8 shadow-sm">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-error-subtle border border-error/30 text-error flex items-start gap-3 text-xs">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -218,26 +228,59 @@ export default function AddHostingPage() {
               />
             </div>
 
+            {/* Auth Method Selection */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-text-secondary">
-                  cPanel API Token <span className="text-error">*</span>
-                </label>
-                <span className="text-[10px] text-text-muted">Generate in cPanel &rarr; Manage API Tokens</span>
+              <label className="block text-xs font-medium text-text-secondary mb-1">Authentication Method</label>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setAuthType('password')}
+                  className={`py-2 px-3 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition ${
+                    authType === 'password'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-card-border bg-sidebar text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  cPanel Password (Simple)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthType('api_token')}
+                  className={`py-2 px-3 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition ${
+                    authType === 'api_token'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-card-border bg-sidebar text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  <Key className="w-3.5 h-3.5" />
+                  API Token
+                </button>
               </div>
+
               <div className="relative">
-                <Key className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                {authType === 'password' ? (
+                  <Lock className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                ) : (
+                  <Key className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                )}
                 <input
                   type="password"
                   required
                   value={apiToken}
                   onChange={(e) => setApiToken(e.target.value)}
-                  placeholder="Paste API token from cPanel..."
+                  placeholder={
+                    authType === 'password'
+                      ? 'Enter your regular cPanel login password...'
+                      : 'Paste API token from cPanel (Manage API Tokens)...'
+                  }
                   className="w-full bg-sidebar border border-card-border rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
                 />
               </div>
               <p className="text-[10px] text-text-muted mt-1.5">
-                Tokens are encrypted server-side with AES-256-GCM and never returned to the browser or logs.
+                {authType === 'password'
+                  ? 'If your hosting provider disabled "Manage API Tokens", simply use your cPanel login password. Encrypted with AES-256-GCM.'
+                  : 'Tokens are generated in cPanel -> Manage API Tokens and encrypted with AES-256-GCM.'}
               </p>
             </div>
 
@@ -249,26 +292,44 @@ export default function AddHostingPage() {
                 disabled={testing}
                 className="text-xs bg-sidebar hover:bg-card-border text-text-primary font-medium px-4 py-2 rounded-lg border border-card-border transition flex items-center gap-2"
               >
-                {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> : <RotateCcw className="w-3.5 h-3.5 text-text-muted" />}
-                <span>Test cPanel Credentials</span>
+                {testing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Testing Connection...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Test Connection
+                  </>
+                )}
               </button>
             </div>
 
-            {/* Submit */}
-            <div className="pt-6 border-t border-card-border/60 flex items-center justify-end gap-3">
+            {/* Form Actions */}
+            <div className="pt-4 border-t border-card-border flex items-center justify-end gap-3">
               <Link
                 href="/hosting"
-                className="text-xs text-text-muted hover:text-text-primary px-4 py-2 rounded-lg"
+                className="text-xs px-4 py-2.5 rounded-lg border border-card-border hover:bg-sidebar text-text-muted hover:text-text-primary transition"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg shadow-md shadow-primary/25 disabled:opacity-60 transition flex items-center gap-2"
+                className="text-xs bg-primary hover:bg-primary-hover disabled:opacity-50 text-white font-medium px-5 py-2.5 rounded-lg transition flex items-center gap-2 shadow-lg shadow-primary/20"
               >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Server className="w-4 h-4" />}
-                <span>Save & Connect Host</span>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Saving Connection...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-3.5 h-3.5" />
+                    Save & Encrypt Connection
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -277,4 +338,3 @@ export default function AddHostingPage() {
     </DashboardLayout>
   );
 }
-
