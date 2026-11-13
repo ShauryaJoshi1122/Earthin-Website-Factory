@@ -1,0 +1,40 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production build artifacts
+/build
+
+# Misc
+.DS_Store
+*.pem
+*.sqlite
+*.log
+
+# Local environment files
+.env*.local
+.env
+!.env.example
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Existing CMS Repository
+/existing-cms/
+
+# Storage & CMS inspection / generated packages
+/storage/
+/temp/
+*.zip
