@@ -54,7 +54,7 @@ export default function CreateWebsiteWizard() {
   const [country, setCountry] = useState('India');
   const [state, setState] = useState('Delhi');
   const [city, setCity] = useState('New Delhi');
-  const [contactEmail, setContactEmail] = useState('');
+  const [contactEmail, setContactEmail] = useState('editor@earthin.online');
   const [contactPhone, setContactPhone] = useState('');
   const [address, setAddress] = useState('');
 
@@ -88,7 +88,7 @@ export default function CreateWebsiteWizard() {
 
   // Step 7: Administrator
   const [adminName, setAdminName] = useState('Super Admin');
-  const [adminEmail, setAdminEmail] = useState('');
+  const [adminEmail, setAdminEmail] = useState('admin@earthin.online');
 
   // Load Hosting, Themes, Plugins
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function CreateWebsiteWizard() {
       country,
       state,
       city,
-      contactEmail: contactEmail || adminEmail,
+      contactEmail: (contactEmail || adminEmail || 'editor@earthin.online').trim(),
       contactPhone,
       address,
       mainLogoUrl,
@@ -177,13 +177,13 @@ export default function CreateWebsiteWizard() {
       headerStyle,
       footerStyle,
       hostingConnectionId,
-      primaryDomain,
+      primaryDomain: (primaryDomain || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, ''),
       subdomain,
       documentRoot,
       selectedThemeSlug,
       selectedPluginSlugs,
-      adminName,
-      adminEmail,
+      adminName: (adminName || 'Super Admin').trim(),
+      adminEmail: (adminEmail || contactEmail || 'admin@earthin.online').trim(),
     };
 
     try {

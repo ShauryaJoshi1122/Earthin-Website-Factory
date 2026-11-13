@@ -19,23 +19,29 @@ import { generateUuid } from '@/lib/crypto';
 import { z } from 'zod';
 
 const createWebsiteSchema = z.object({
-  name: z.string().min(2),
-  title: z.string().min(2),
-  tagline: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string().min(1).transform((v) => v.trim()),
+  title: z.string().min(1).transform((v) => v.trim()),
+  tagline: z.string().optional().default(''),
+  description: z.string().optional().default(''),
   language: z.string().default('hi'),
   country: z.string().default('India'),
-  state: z.string().optional(),
-  city: z.string().optional(),
-  contactEmail: z.string().email(),
-  contactPhone: z.string().optional(),
-  address: z.string().optional(),
+  state: z.string().optional().default(''),
+  city: z.string().optional().default(''),
+  contactEmail: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.trim().toLowerCase() : ''))
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Invalid contact email format (e.g. editor@domain.com)',
+    }),
+  contactPhone: z.string().optional().default(''),
+  address: z.string().optional().default(''),
 
   // Branding
-  mainLogoUrl: z.string().optional(),
-  headerLogoUrl: z.string().optional(),
-  footerLogoUrl: z.string().optional(),
-  faviconUrl: z.string().optional(),
+  mainLogoUrl: z.string().optional().default(''),
+  headerLogoUrl: z.string().optional().default(''),
+  footerLogoUrl: z.string().optional().default(''),
+  faviconUrl: z.string().optional().default(''),
   primaryColor: z.string().default('#d60000'),
   secondaryColor: z.string().default('#0b1120'),
   headerStyle: z.string().default('aajtak_broadcast'),
@@ -43,8 +49,17 @@ const createWebsiteSchema = z.object({
 
   // Hosting & Domain
   hostingConnectionId: z.number().int(),
-  primaryDomain: z.string().min(3),
-  subdomain: z.string().optional(),
+  primaryDomain: z
+    .string()
+    .min(1)
+    .transform((val) =>
+      val
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/\/+$/, '')
+    ),
+  subdomain: z.string().optional().default(''),
   documentRoot: z.string().default('/public_html'),
 
   // Theme & Plugins
@@ -52,8 +67,14 @@ const createWebsiteSchema = z.object({
   selectedPluginSlugs: z.array(z.string()).default([]),
 
   // Administrator
-  adminName: z.string().min(2),
-  adminEmail: z.string().email(),
+  adminName: z.string().min(1).transform((v) => v.trim()),
+  adminEmail: z
+    .string()
+    .min(1)
+    .transform((val) => val.trim().toLowerCase())
+    .refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Invalid administrator email format (e.g. admin@domain.com)',
+    }),
 });
 
 export async function GET(req: NextRequest) {
@@ -121,6 +142,11 @@ export async function POST(req: NextRequest) {
 
     // 1. Create Website
     const websiteUuid = generateUuid();
+    const finalContactEmail =
+      data.contactEmail ||
+      data.adminEmail ||
+      `contact@${data.primaryDomain.replace(/^www\./, '').split('/')[0]}`;
+
     const insertedWebsites = await db
       .insert(websites)
       .values({
@@ -136,7 +162,7 @@ export async function POST(req: NextRequest) {
         country: data.country,
         state: data.state,
         city: data.city,
-        contactEmail: data.contactEmail,
+        contactEmail: finalContactEmail,
         contactPhone: data.contactPhone,
         address: data.address,
         hostingConnectionId: data.hostingConnectionId,
