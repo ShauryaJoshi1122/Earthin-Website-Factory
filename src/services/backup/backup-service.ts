@@ -3,7 +3,7 @@ import { backupRecords, websites, databaseCredentials, hostingConnections } from
 import { eq, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 import { decryptSecret } from '@/lib/crypto';
-import { put } from '@vercel/blob';
+import { uploadAsset } from '@/lib/storage';
 
 export interface CreateBackupOptions {
   websiteId: number;
@@ -45,15 +45,14 @@ export class BackupService {
     const checksumSha256 = crypto.createHash('sha256').update(backupContent).digest('hex');
     let blobUrl: string | undefined;
 
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const blob = await put(`backups/${website.id}/${filename}`, backupContent, {
-          access: 'public',
-        });
-        blobUrl = blob.url;
-      } catch (err) {
-        console.error('Backup blob upload notice:', err);
-      }
+    try {
+      const uploadResult = await uploadAsset(`backups/${website.id}/${filename}`, backupContent, {
+        contentType: 'application/sql',
+        bucket: 'assets',
+      });
+      blobUrl = uploadResult.url;
+    } catch (err) {
+      console.error('Backup object storage upload notice:', err);
     }
 
     const inserted = await db

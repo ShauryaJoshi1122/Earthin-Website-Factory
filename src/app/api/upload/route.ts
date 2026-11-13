@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
 import { getSessionUser } from '@/lib/auth';
+import { uploadAsset } from '@/lib/storage';
 
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate MIME types
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/x-icon', 'application/zip'];
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/x-icon', 'application/zip', 'text/plain'];
     if (!allowedTypes.includes(file.type) && !file.name.endsWith('.ico')) {
       return NextResponse.json({ error: `Unsupported file type: ${file.type}` }, { status: 400 });
     }
@@ -31,21 +31,21 @@ export async function POST(req: NextRequest) {
     const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const pathname = `${folder}/${filename}`;
 
-    // Upload to Vercel Blob if token available
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      const blob = await put(pathname, file, {
-        access: 'public',
-      });
-      return NextResponse.json({ url: blob.url });
-    } else {
-      // Local fallback representation for dev without Blob token
-      const arrayBuffer = await file.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
-      const dataUri = `data:${file.type};base64,${base64}`;
-      return NextResponse.json({ url: dataUri });
-    }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const result = await uploadAsset(pathname, buffer, {
+      contentType: file.type || 'application/octet-stream',
+      bucket: 'assets',
+    });
+
+    return NextResponse.json({
+      url: result.url,
+      key: result.key,
+      provider: result.provider,
+    });
   } catch (err: any) {
+    console.error('Upload handler error:', err);
     return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
   }
 }
-
